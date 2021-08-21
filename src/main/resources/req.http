@@ -1,0 +1,16 @@
+###
+POST http://localhost:8080/cinema/hall-info
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "email": "email1",
+  "phone": "phone1",
+  "session_id": "100",
+  "row": 1,
+  "cell": 1
+}
+
+###
+GET http://localhost:8080/cinema/hall-info?sessionId=100
+Accept: application/json

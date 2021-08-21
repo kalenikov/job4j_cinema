@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <title>Cinema | Payment</title>
+</head>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"
+        integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
+        crossorigin="anonymous"></script>
+<script>
+
+    $(document).ready(function () {
+        let searchParams = new URLSearchParams(location.search)
+        let row = searchParams.get('row');
+        let cell = searchParams.get('cell');
+        let sessionId = searchParams.get('sessionId');
+
+        $('#placeText').text(`Ряд ${row}, место ${cell}`)
+        $('#sessionId').val(sessionId)
+        $('#row').val(row)
+        $('#cell').val(cell)
+
+        $('#form').validate({
+            rules: {
+                username: "required",
+                phone: "required",
+            },
+            messages: {
+                username: "Please input your name",
+                phone: "Please input your phone",
+            },
+            submitHandler: form => form.submit()
+        });
+
+        let URL = "http://localhost:8080/cinema/"
+        $("#form").submit(function (e) {
+            e.preventDefault();
+            $('#subBtn').prop('disabled', true);
+            $.ajax({
+                type: "POST",
+                crossdomain: true,
+                url: URL + "/hall-info",
+                data: $(this).serialize(),
+                success: function (data) {
+                    location.href = URL
+                },
+                error: jqXHR => {
+                    if (jqXHR.status === 0) {
+                        alert('Not connect. Verify Network');
+                    } else if (jqXHR.status === 500) {
+                        alert('Это билет уже купили. Вернитесь назад и выберите другое место');
+                    } else {
+                        alert('Uncaught error: ' + jqXHR.responseText);
+                    }
+                }
+            });
+        });
+    });
+</script>
+<div class="container">
+    <div class="row pt-3">
+        <div>
+            Вы выбрали место: <strong id="placeText"></strong>
+        </div>
+    </div>
+    <div class="row">
+        <form method="post" id="form" name="form">
+            <input hidden type="text" id="row" name="row">
+            <input hidden type="text" id="cell" name="cell">
+            <input hidden type="text" id="sessionId" name="sessionId">
+            <div class="form-group">
+                <label for="username">Ваше имя</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="ФИО">
+            </div>
+            <div class="form-group">
+                <label for="phone">Номер телефона</label>
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="Номер телефона">
+            </div>
+            <button class="btn btn-success" id="subBtn">Оплатить</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

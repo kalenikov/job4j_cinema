@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <title>Cinema | Hall</title>
+</head>
+<body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj"
+        crossorigin="anonymous"></script>
+<script>
+
+    $(document).ready(function () {
+        getAndRedrawPurchasedPlaces()
+        setInterval(getAndRedrawPurchasedPlaces, 30000)
+    })
+
+    function getAndRedrawPurchasedPlaces() {
+        let sessionId = $('#sessionId').val()
+        $.ajax({
+            type: 'GET',
+            crossdomain: true,
+            url: 'http://localhost:8080/cinema/hall-info?sessionId=' + sessionId,
+            dataType: 'json'
+        }).done(data => {
+            //convert json [{"row": n, "cell": m}] to 2d-array [[row, cell]]
+            let places = data.map(place => [place.row, place.cell])
+            redraw(places)
+        }).fail(err => console.log(err));
+    }
+
+    function redraw(purchasedPlaces) {
+        // for purchased places add 'success' class
+        // for all others add 'danger' class
+        $.each($('td'), (i, tdi) => {
+            let input = tdi.children[0].children[0];
+            let place = [
+                Number.parseInt(input.getAttribute('cell')),
+                Number.parseInt(input.getAttribute('row'))
+            ]
+            let isFree = includeInArray(place, purchasedPlaces)
+            if (isFree) {
+                tdi.classList.add('table-success')
+                tdi.classList.remove('table-danger')
+            } else {
+                tdi.classList.add('table-danger')
+                tdi.classList.remove('table-success')
+            }
+            input.disabled = !isFree
+        })
+    }
+
+    function payment() {
+        let URL = 'http://localhost:8080/cinema/payment.html'
+        let sessionId = $('#sessionId').val()
+        let checked = document.querySelector("input[name=place]:checked")
+        let row = checked.getAttribute('row')
+        let cell = checked.getAttribute('cell')
+        location.href = URL + `?sessionId=${sessionId}&row=${row}&cell=${cell}`
+    }
+
+    // search array ([row,cell]) in 2d-array ([[row,cell],[row,cell]..])
+    // https://stackoverflow.com/questions/24943200/javascript-2d-array-indexof
+    function includeInArray(item, array) {
+        for (let i = 0; i < array.length; i++) {
+            if (array[i][0] === item[0] && array[i][1] === item[1]) {
+                return true;
+            }
+        }
+        return false;
+    }
+</script>
+
+<div class="container">
+    <div class="row pt-3" id="places">
+        <h4>
+            Бронирование месте на сеанс
+        </h4>
+        <select id="sessionId" onchange="getAndRedrawPurchasedPlaces()">
+            <option label="Сеанс1" value="100" selected></option>
+            <option label="Сеанс2" value="200"></option>
+            <option label="Сеанс3" value="300"></option>
+        </select>
+        <table class="table table-bordered">
+            <thead>
+            <tr>
+                <th style="width: 120px;">Ряд / Место</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th>1</th>
+                <td><label><input type="radio" name="place" row="1" cell="1"> Ряд 1, Место 1</label></td>
+                <td><label><input type="radio" name="place" row="1" cell="2"> Ряд 1, Место 2</label></td>
+                <td><label><input type="radio" name="place" row="1" cell="3"> Ряд 1, Место 3</label></td>
+            </tr>
+            <tr>
+                <th>2</th>
+                <td><label><input type="radio" name="place" row="2" cell="1"> Ряд 2, Место 1</label></td>
+                <td><label><input type="radio" name="place" row="2" cell="2"> Ряд 2, Место 2</label></td>
+                <td><label><input type="radio" name="place" row="2" cell="3"> Ряд 2, Место 3</label></td>
+            </tr>
+            <tr>
+                <th>3</th>
+                <td><label><input type="radio" name="place" row="3" cell="1"> Ряд 3, Место 1</label></td>
+                <td><label><input type="radio" name="place" row="3" cell="2"> Ряд 3, Место 2</label></td>
+                <td><label><input type="radio" name="place" row="3" cell="3"> Ряд 3, Место 3</label></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row float-right">
+        <button type="button" class="btn btn-success" onclick="payment()">Оплатить</button>
+    </div>
+</div>
+</body>
+</html>
